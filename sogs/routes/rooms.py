@@ -318,7 +318,7 @@ def get_permission_info(room):
     return jsonify({k: addExtraPermInfo(v) for k, v in room.permissions.items()})
 
 
-@rooms.get("/room/<Room:room>/permissions/<SessionID:sid>")
+@rooms.get("/room/<Room:room>/permissions/<AnySessionID:sid>")
 @auth.mod_required
 def get_user_permission_info(room, sid):
     """
@@ -352,7 +352,7 @@ def get_future_permission_info(room):
     return jsonify(room.future_permissions)
 
 
-@rooms.get("/room/<Room:room>/futurePermissions/<SessionID:sid>")
+@rooms.get("/room/<Room:room>/futurePermissions/<AnySessionID:sid>")
 @auth.mod_required
 def get_user_future_permissions(room, sid):
     """
@@ -368,7 +368,7 @@ def get_user_future_permissions(room, sid):
     return jsonify(room.user_future_permissions(user))
 
 
-@rooms.post("/room/<Room:room>/permissions/<SessionID:sid>")
+@rooms.post("/room/<Room:room>/permissions/<AnySessionID:sid>")
 @auth.mod_required
 def set_permissions(room, sid):
     """
@@ -468,7 +468,7 @@ def set_permissions(room, sid):
     return jsonify(res)
 
 
-@rooms.post("/room/<Room:room>/futurePermissions/<SessionID:sid>")
+@rooms.post("/room/<Room:room>/futurePermissions/<AnySessionID:sid>")
 @auth.mod_required
 def set_future_permissions(room, sid):
     """
@@ -937,7 +937,7 @@ def serve_file_with_ignored_filename(room, fileId, filename):
     return serve_file(room=room, fileId=fileId)
 
 
-@rooms.delete("/room/<Room:room>/all/<SessionID:sid>")
+@rooms.delete("/room/<Room:room>/all/<AnySessionID:sid>")
 def delete_all_posts(room, sid):
     """
     Deletes all posts from a room made by a user
@@ -955,14 +955,18 @@ def delete_all_posts(room, sid):
     - 403 Forbidden — if the invoking user does not have access to the room.
     - 404 Not Found — if the user we are deleting posts from made no posts in this room.
     """
-    user = muser.User(session_id=sid, autovivify=False)
+
+    user = muser.User(session_id=sid, try_blinding=True, autovivify=False)
+    app.logger.warning(f"plop1: {user.session_id}")
+
     deleted, _ = room.delete_all_posts(user, deleter=g.user)
+
     if not deleted:
         abort(http.NOT_FOUND)
     return jsonify({})
 
 
-@rooms.delete("/rooms/all/<SessionID:sid>")
+@rooms.delete("/rooms/all/<AnySessionID:sid>")
 def delete_user_posts_from_all_rooms(sid):
     """
     Deletes all posts from all rooms by a given user.
@@ -980,7 +984,7 @@ def delete_user_posts_from_all_rooms(sid):
     """
     deletions = {}
     total = 0
-    user = muser.User(session_id=sid, autovivify=False)
+    user = muser.User(session_id=sid, try_blinding=True, autovivify=False)
     for room in mroom.get_accessible_rooms(g.user):
         try:
             count, _ = room.delete_all_posts(user, deleter=g.user)
