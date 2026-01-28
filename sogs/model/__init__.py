@@ -15,6 +15,7 @@ if config.PROFANITY_FILTER and config.RUNNING_AS_APP:
 capabilities = {
     'sogs',  # Basic sogs capabilities
     'reactions',  # Reactions, added in 0.3.1
+    'server-ban-and-delete',  # Support "Ban from Server and Delete All"
     # 'newcap',  # Add here
 }
 
