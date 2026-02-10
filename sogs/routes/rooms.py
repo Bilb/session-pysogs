@@ -957,7 +957,6 @@ def delete_all_posts(room, sid):
     """
 
     user = muser.User(session_id=sid, try_blinding=True, autovivify=False)
-    app.logger.warning(f"plop1: {user.session_id}")
 
     deleted, _ = room.delete_all_posts(user, deleter=g.user)
 
